@@ -1,0 +1,19 @@
+# Railway / Nixpacks build config for the trivia-feev MERN app.
+# Single service: Express serves the built React client and the /graphql API.
+
+[phases.setup]
+nixPkgs = ["nodejs_20"]
+
+[phases.install]
+cmds = [
+  "npm install --ignore-scripts",
+  "npm install --prefix server",
+  "npm install --prefix client",
+]
+
+[phases.build]
+# CI=false so CRA does not treat ESLint warnings as build-breaking errors.
+cmds = ["CI=false npm run build --prefix client"]
+
+[start]
+cmd = "node server/server.js"
