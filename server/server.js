@@ -17,14 +17,9 @@ const server = new ApolloServer({
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
-if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, '../client/build')));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(__dirname, '../client/build/index.html'));
-  });
+// Single-service deploy: always serve the built React client.
+app.use(express.static(path.join(__dirname, '../client/build')));
 
-  }
-  
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../client/build/index.html'));
 });
@@ -32,6 +27,12 @@ app.get('/', (req, res) => {
 const startServer = async (typeDefs, resolvers) => {
   await server.start();
   server.applyMiddleware({ app });
+
+  // SPA fallback: any non-API route returns the React app (registered
+  // after Apollo so it does not intercept /graphql).
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/build/index.html'));
+  });
 
   db.once("open", () => {
     app.listen(PORT, () => {
